@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Pago del pedido</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+        .payment-row {
+            display: flex;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+
+        .payment-field {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            flex: 1 1 180px;
+        }
+
+        .payment-field input {
+            padding: 12px 14px;
+            border-radius: 12px;
+            border: 1px solid #bdbdbd;
+            font-size: 1rem;
+            outline: none;
+        }
+
+        .payment-field input:focus {
+            box-shadow: 0 0 0 4px rgba(178, 58, 72, 0.12);
+            border-color: #b23a48;
+        }
+
+        .payment-error {
+            color: #b21f1f;
+            margin-top: 6px;
+            min-height: 22px;
+            font-size: 0.95rem;
+        }
+
+        .text-link-red {
+            color: #b23a48;
+            text-decoration: underline;
+            background: none !important;
+            border: none !important;
+            padding: 0 !important;
+            display: inline-block;
+            font-weight: bold;
+        }
+
+        .text-link-red:hover {
+            color: #7e1b28;
+        }
+
+        .success-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.45);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.25s ease, visibility 0.25s ease;
+            z-index: 40;
+        }
+
+        .success-overlay.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .success-card {
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 24px;
+            padding: 32px 30px;
+            width: min(100%, 460px);
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.18);
+            text-align: center;
+        }
+
+        .success-circle {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            background: #e8f5ec;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+        }
+
+        .success-circle span {
+            font-size: 46px;
+            color: #1f8f4f;
+        }
+
+        .success-card h3 {
+            margin-bottom: 12px;
+            color: #1f5f36;
+        }
+
+        .success-card p {
+            color: #3d3d3d;
+            line-height: 1.6;
+        }
+
+        .cart-summary li {
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+
+        .cart-summary li strong {
+            font-weight: 500;
+        }
+    </style>
+</head>
+
+<body class="fondo-home">
+    <div class="contenido">
+        <a href="/" class="home-button">
+            <span class="text">Inicio</span>
+        </a>
+
+        <div class="container carta_Clientes">
+            <a href="/profile" class="btn-profile-icon" style="position: static;">
+                <img src="{{ url_for('static', filename='images/iconos/perfil.png') }}" class="prof-icon-img"
+                    alt="Perfil">
+            </a>
+
+            <h2>Pagar pedido</h2>
+
+            <div class="cart-summary" style="padding: 20px; background: rgba(255,255,255,0.92); border-radius: 16px;">
+                {% if cart_items %}
+                <h3>Resumen del carrito</h3>
+                <ul style="list-style:none; padding:0; margin:0 0 18px 0;">
+                    {% for item in cart_items %}
+                    <li>
+                        {{ item.nombre }} × {{ item.cantidad }} =
+                        {{ ('%.2f' % (item.precio * item.cantidad)) }}€
+                        {% if item.tipo == 'menu' and item.seleccion %}
+                        <br>
+                        <small>
+                            Entrante: {{ item.seleccion.entrante.nombre }} ·
+                            Principal: {{ item.seleccion.principal.nombre }} ·
+                            Postre: {{ item.seleccion.postre.nombre }} ·
+                            Bebida: {{ item.seleccion.bebida.nombre }}
+                        </small>
+                        {% endif %}
+                    </li>
+                    {% endfor %}
+                </ul>
+
+                <p><strong>Total:</strong> {{ '%.2f' | format(total) }}€</p>
+                <p><strong>Saldo disponible:</strong> {{ '%.2f' | format(saldo) }}€</p>
+                <p><strong>Descuento:</strong> {{ '%.2f' | format(descuento) }}€</p>
+                <p style="margin-top: 18px; font-size: 1.1rem;"><strong>Importe final: {{ '%.2f' | format(final_total) }}€</strong></p>
+
+                <form id="payment-form" style="margin-top: 24px; display:flex; flex-direction:column; gap:16px;">
+                    <div class="payment-field">
+                        <label for="card-number">Número de tarjeta</label>
+                        <input id="card-number" name="card_number" type="text" inputmode="numeric"
+                            placeholder="1234 5678 9012 3456" maxlength="19" autocomplete="cc-number">
+                    </div>
+
+                    <div class="payment-row">
+                        <div class="payment-field">
+                            <label for="expiry">Fecha de caducidad</label>
+                            <input id="expiry" name="expiry" type="text" placeholder="MM/AA" maxlength="5"
+                                autocomplete="cc-exp">
+                        </div>
+                        <div class="payment-field">
+                            <label for="ccv">CCV</label>
+                            <input id="ccv" name="ccv" type="text" inputmode="numeric" placeholder="123"
+                                maxlength="3" autocomplete="cc-csc">
+                        </div>
+                    </div>
+
+                    <div id="payment-error" class="payment-error"></div>
+
+                    <button type="submit" class="btn-editar-cart">Confirmar pago</button>
+                    <div style="display:flex; gap:16px; flex-wrap:wrap; align-items:center;">
+                        <a href="{{ url_for('carta') }}" class="text-link-red">Volver a la carta</a>
+                        <a href="/" class="text-link-red">Ir al inicio</a>
+                    </div>
+                </form>
+                {% else %}
+                <p>No hay artículos en el carrito.</p>
+                <a href="{{ url_for('carta') }}" class="text-link-red">Volver a la carta</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div id="success-alert" class="success-overlay" role="alert" aria-live="assertive">
+        <div class="success-card">
+            <div class="success-circle">
+                <span>✓</span>
+            </div>
+            <h3>Pago exitoso</h3>
+            <p>Tu pedido se está preparando.</p>
+            <p style="margin-top: 14px; color: #5a5a5a; font-size: 0.95rem;">Serás redirigido al inicio en unos segundos.</p>
+        </div>
+    </div>
+
+    <script>
+        const paymentForm = document.getElementById('payment-form');
+        const paymentError = document.getElementById('payment-error');
+        const successAlert = document.getElementById('success-alert');
+
+        if (paymentForm && paymentError && successAlert) {
+            function showError(message) {
+                paymentError.textContent = message;
+            }
+
+            function formatCardNumber(value) {
+                return value.replace(/\D/g, '').replace(/(.{4})/g, '$1 ').trim();
+            }
+
+            const cardNumberInput = document.getElementById('card-number');
+            cardNumberInput.addEventListener('input', () => {
+                const formatted = formatCardNumber(cardNumberInput.value);
+                cardNumberInput.value = formatted;
+            });
+
+            paymentForm.addEventListener('submit', async (event) => {
+                event.preventDefault();
+                showError('');
+
+                const cardNumber = cardNumberInput.value.replace(/\s+/g, '');
+                const expiry = document.getElementById('expiry').value.trim();
+                const ccv = document.getElementById('ccv').value.trim();
+
+                if (!/^\d{16}$/.test(cardNumber)) {
+                    showError('Introduce un número de tarjeta válido de 16 dígitos.');
+                    return;
+                }
+
+                if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(expiry)) {
+                    showError('Introduce una fecha de caducidad válida en formato MM/AA.');
+                    return;
+                }
+
+                const [month, year] = expiry.split('/').map(Number);
+                const expiryDate = new Date(2000 + year, month - 1, 1);
+                const now = new Date();
+                const currentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+                if (expiryDate < currentMonth) {
+                    showError('La tarjeta está caducada. Usa otra fecha de caducidad.');
+                    return;
+                }
+
+                if (!/^\d{3}$/.test(ccv)) {
+                    showError('Introduce un CCV de 3 dígitos.');
+                    return;
+                }
+
+                try {
+                    const response = await fetch("{{ url_for('confirmar_pago') }}", {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            card_number: cardNumber,
+                            expiry,
+                            ccv
+                        })
+                    });
+
+                    const result = await response.json();
+                    if (response.ok && result.status === 'success') {
+                        localStorage.removeItem('restaurante_carrito');
+                        successAlert.classList.add('visible');
+                        setTimeout(() => {
+                            window.location.href = '/';
+                        }, 4200);
+                    } else {
+                        showError(result.message || 'No se pudo procesar el pago.');
+                    }
+                } catch (error) {
+                    showError('Error de red. Intenta de nuevo.');
+                }
+            });
+        }
+    </script>
+</body>
+
+</html>

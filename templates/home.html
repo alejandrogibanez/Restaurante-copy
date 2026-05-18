@@ -1,0 +1,28 @@
+<head>
+    <title>Home</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+
+<body class="fondo-home">
+    <div class="contenido">
+
+
+
+        <div class="container-home">
+            <a href="/profile" class="btn-profile-icon">
+                <img src="{{ url_for('static', filename='images/iconos/perfil.png') }}" id="boton-perfil"
+                    class="prof-icon-img" alt="Perfil">
+
+            </a>
+            <h1 class="titulo">Sabor del Himalaya</h1>
+            <p class="subtitulo">
+                Descubre los auténticos sabores de Nepal.<br>
+                Gestiona tu cuenta, haz pedidos y disfruta de una experiencia única.
+            </p>
+            <div class="buttons">
+                <a href="/carta" class="btn btn-primary">Acceder a la carta</a>
+                <a href="/login" class="btn btn-secondary">Iniciar sesión</a>
+            </div>
+        </div>
+    </div>
+</body>

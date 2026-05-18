@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Carta cliente</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+
+</head>
+
+<body class="fondo-home">
+    <div class="contenido">
+        <a href="/" class="home-button">
+            <span class="text">Inicio</span>
+        </a>
+        <div class="container carta_Clientes">
+            <a href="/profile" class="btn-profile-icon" style="position: static;">
+                <img src="{{ url_for('static', filename='images/iconos/perfil.png') }}" id="boton-perfil"
+                    class="prof-icon-img" alt="Perfil">
+            </a>
+            <h2>Nuestra carta</h2>
+
+            <div class="cart-actions">
+                <div class="cart-wrapper">
+
+                    <button id="boton-ver-carrito" class="btn-show-cart">
+                        <span class="cart-badge"></span>
+                        <img src="{{ url_for('static', filename='images/iconos/carritoWhite.png') }}"
+                            class="cart-icon-img" alt="Carrito">
+                        <span id="cart-count" class="cart-badge" style="font-family: 'Arial'">0</span>
+                    </button>
+                    <div id="cart-dropdown" class="cart-dropdown">
+                    </div>
+
+                </div>
+
+
+            </div>
+
+            <div class="scroll-box">
+                <div class="categoria-grupo daily-menu-card">
+                    <h3 class="titulo-categoria" data-categoria="MenuDia">Menú del día - 15 €{% if menu_fecha_es %} · {{ menu_fecha_es }}{% endif %}</h3>
+                    <div class="platos-categoria" id="categoria-MenuDia">
+                        {% if menu_dia %}
+                        <form id="daily-menu-form" class="daily-menu-form" data-menu-id="{{ menu_dia.id_menu }}"
+                            data-menu-fecha="{{ menu_dia.fecha or '' }}">
+                            <div class="daily-menu-choice-group">
+                                <h4>Entrante</h4>
+                                <div class="daily-menu-options">
+                                    {% for entrante in menu_dia.entrantes %}
+                                    <label class="daily-menu-option">
+                                        <input type="radio" name="entrante" value="{{ entrante.id_plato }}"
+                                            data-nombre="{{ entrante.nombre }}" required>
+                                        <span>{{ entrante.nombre }}</span>
+                                    </label>
+                                    {% endfor %}
+                                </div>
+                            </div>
+
+                            <div class="daily-menu-choice-group">
+                                <h4>Plato principal</h4>
+                                <div class="daily-menu-options">
+                                    {% for principal in menu_dia.principales %}
+                                    <label class="daily-menu-option">
+                                        <input type="radio" name="principal" value="{{ principal.id_plato }}"
+                                            data-nombre="{{ principal.nombre }}" required>
+                                        <span>{{ principal.nombre }}</span>
+                                    </label>
+                                    {% endfor %}
+                                </div>
+                            </div>
+
+                            <div class="daily-menu-choice-group">
+                                <h4>Postre</h4>
+                                <div class="daily-menu-options">
+                                    {% for postre in menu_dia.postres %}
+                                    <label class="daily-menu-option">
+                                        <input type="radio" name="postre" value="{{ postre.id_plato }}"
+                                            data-nombre="{{ postre.nombre }}" required>
+                                        <span>{{ postre.nombre }}</span>
+                                    </label>
+                                    {% endfor %}
+                                </div>
+                            </div>
+
+                            <div class="daily-menu-choice-group">
+                                <h4>Bebida incluida</h4>
+                                <div class="daily-menu-options">
+                                    {% for bebida in menu_dia.bebidas %}
+                                    <label class="daily-menu-option">
+                                        <input type="radio" name="bebida" value="{{ bebida.id_plato }}"
+                                            data-nombre="{{ bebida.nombre }}" required>
+                                        <span>{{ bebida.nombre }}</span>
+                                    </label>
+                                    {% endfor %}
+                                </div>
+                            </div>
+
+                            <button type="submit" class="daily-menu-add">Añadir menú al carrito</button>
+                        </form>
+                        {% else %}
+                        <div class="daily-menu-unavailable">
+                            <strong>El menú del día no está disponible para hoy.</strong>
+                            <span>El administrador debe configurar el menú para esta fecha.</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="categoria-grupo">
+                    <h3 class="titulo-categoria" data-categoria="Entrante">Entrantes</h3>
+                    <div class="platos-categoria" id="categoria-Entrante">
+                        {% for plato in platos if plato.categoria == 'Entrante' and plato.activo_en_carta %}
+                        <div class="plato-card">
+                            <p class="plato-item">{{ plato.nombre }} - {{ plato.precio }}€</p>
+                            <p class="descripcion-plato">{{ plato.descripcion }}</p>
+
+                            <button type="button" class="btn-agregar-cart" data-id="{{ plato.id_plato }}"
+                                data-nombre="{{ plato.nombre }}" data-precio="{{ plato.precio }}">
+                                <span class="cart-plus">+</span>
+                                <img src="{{ url_for('static', filename='images/iconos/carrito.png') }}"
+                                    class="cart-icon-img" alt="Carrito">
+                            </button>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="categoria-grupo">
+                    <h3 class="titulo-categoria" data-categoria="Principal">Principales</h3>
+                    <div class="platos-categoria" id="categoria-Principal">
+                        {% for plato in platos if plato.categoria == 'Principal' and plato.activo_en_carta %}
+                        <div class="plato-card">
+                            <p class="plato-item">{{ plato.nombre }} - {{ plato.precio }}€</p>
+                            <p class="descripcion-plato">{{ plato.descripcion }}</p>
+                            <button type="button" class="btn-agregar-cart" data-id="{{ plato.id_plato }}"
+                                data-nombre="{{ plato.nombre }}" data-precio="{{ plato.precio }}">
+                                <span class="cart-plus">+</span>
+                                <img src="{{ url_for('static', filename='images/iconos/carrito.png') }}"
+                                    class="cart-icon-img" alt="Carrito">
+                            </button>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="categoria-grupo">
+                    <h3 class="titulo-categoria" data-categoria="Postre">Postres</h3>
+                    <div class="platos-categoria" id="categoria-Postre">
+                        {% for plato in platos if plato.categoria == 'Postre' and plato.activo_en_carta %}
+                        <div class="plato-card">
+                            <p class="plato-item">{{ plato.nombre }} - {{ plato.precio }}€</p>
+                            <p class="descripcion-plato">{{ plato.descripcion }}</p>
+                            <button type="button" class="btn-agregar-cart" data-id="{{ plato.id_plato }}"
+                                data-nombre="{{ plato.nombre }}" data-precio="{{ plato.precio }}">
+                                <span class="cart-plus">+</span>
+                                <img src="{{ url_for('static', filename='images/iconos/carrito.png') }}"
+                                    class="cart-icon-img" alt="Carrito">
+                            </button>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="categoria-grupo">
+                    <h3 class="titulo-categoria" data-categoria="Bebida">Bebidas</h3>
+                    <div class="platos-categoria" id="categoria-Bebida">
+                        {% for plato in platos if plato.categoria == 'Bebida' and plato.activo_en_carta %}
+                        <div class="plato-card">
+                            <p class="plato-item">{{ plato.nombre }} - {{ plato.precio }}€</p>
+                            <p class="descripcion-plato">{{ plato.descripcion }}</p>
+                            <button type="button" class="btn-agregar-cart" data-id="{{ plato.id_plato }}"
+                                data-nombre="{{ plato.nombre }}" data-precio="{{ plato.precio }}">
+                                <span class="cart-plus">+</span>
+                                <img src="{{ url_for('static', filename='images/iconos/carrito.png') }}"
+                                    class="cart-icon-img" alt="Carrito">
+                            </button>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal cliente carrito -->
+    <div id="cartModal" class="modal">
+        <div class="modal-content modal-carrito-content">
+            <span id="closeCart" class="close">&times;</span>
+            <h3>Carrito de la compra</h3>
+            <div id="carrito-items"></div>
+            <p class="cart-total">Total: <span id="modal-total">0.00</span>€</p>
+            <div style="display:flex; gap:10px; margin-top:10px;">
+                <button id="vaciar-carrito" type="button" class="btn-editar-cart">Vaciar
+                    carrito</button>
+                <button id="comprar-ahora" type="button" class="btn-editar-cart">Finalizar compra</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const cartKey = 'restaurante_carrito';
+        const $count = document.getElementById('cart-count');
+        const $modalTotal = document.getElementById('modal-total');
+        const $carritoItems = document.getElementById('carrito-items');
+        const $cartModal = document.getElementById('cartModal');
+
+        // ===== LÓGICA DE CATEGORÍAS ACORDEÓN =====
+        document.querySelectorAll('.titulo-categoria').forEach(h3 => {
+            h3.addEventListener('click', () => {
+                const categoria = h3.dataset.categoria;
+                const contenedor = document.getElementById(`categoria-${categoria}`);
+
+                // Toggle: mostrar/ocultar
+                const estaMostrado = contenedor.style.display !== 'none';
+
+                // Ocultar todas las categorías
+                document.querySelectorAll('.platos-categoria').forEach(div => {
+                    div.style.display = 'none';
+                });
+
+                // Mostrar solo la clickeada si no estaba activa
+                if (!estaMostrado) {
+                    contenedor.style.display = 'block';
+                    h3.classList.add('active');
+                } else {
+                    h3.classList.remove('active');
+                }
+
+                // Remover 'active' de otros h3
+                document.querySelectorAll('.titulo-categoria').forEach(h => {
+                    if (h !== h3) h.classList.remove('active');
+                });
+            });
+        });
+
+        // Mostrar la primera categoría por defecto (Entrantes)
+        const primerH3 = document.querySelector('.titulo-categoria');
+        if (primerH3) {
+            primerH3.click();
+        }
+
+        function getCart() {
+            return JSON.parse(sessionStorage.getItem(cartKey) || '[]');
+        }
+
+        function saveCart(cart) {
+            sessionStorage.setItem(cartKey, JSON.stringify(cart));
+        }
+
+        function getCartItemKey(item) {
+            if (item.tipo === 'menu') {
+                const bebidaId = item.seleccion.bebida ? item.seleccion.bebida.id : 'sin-bebida';
+                return item.item_key || `menu-${item.id_menu}-${item.seleccion.entrante.id}-${item.seleccion.principal.id}-${item.seleccion.postre.id}-${bebidaId}`;
+            }
+
+            return `plato-${item.id_plato}`;
+        }
+
+        function updateCartBadge() {
+            const cart = getCart();
+            const count = cart.reduce((sum, item) => sum + item.cantidad, 0);
+            const total = cart.reduce((sum, item) => sum + item.precio * item.cantidad, 0);
+
+            if (count === 0) {
+                $count.style.display = 'none';
+            } else {
+                $count.style.display = 'inline';
+                $count.textContent = `${count} • ${total.toFixed(2)}€`;
+            }
+        }
+
+        function updateTotal() {
+            const cart = getCart();
+            const total = cart.reduce((sum, item) => sum + item.precio * item.cantidad, 0);
+            $modalTotal.textContent = total.toFixed(2);
+        }
+
+        function renderCartModal() {
+            const cart = getCart();
+            if (cart.length === 0) {
+                $carritoItems.innerHTML = '<p>Carrito vacío</p>';
+                $modalTotal.textContent = '0.00';
+                return;
+            }
+
+            $carritoItems.innerHTML = cart.map(item => `
+            <div style="margin-bottom: 10px; border-bottom: 1px solid #ddd; padding-bottom: 8px;">
+                <strong>${item.nombre}</strong><br>
+                ${item.tipo === 'menu' ? `
+                    <span>Entrante: ${item.seleccion.entrante.nombre}</span><br>
+                    <span>Principal: ${item.seleccion.principal.nombre}</span><br>
+                    <span>Postre: ${item.seleccion.postre.nombre}</span><br>
+                    <span>Bebida: ${item.seleccion.bebida ? item.seleccion.bebida.nombre : item.bebida}</span><br>
+                ` : ''}
+                ${item.cantidad} x ${item.precio.toFixed(2)}€ = ${(item.cantidad * item.precio).toFixed(2)}€
+                <br>
+                <button data-key="${getCartItemKey(item)}" class="btn-agregar-cart btn-remove" style="font-size:12px;margin-top:6px;background: #b23a48;">Quitar uno</button>
+            </div>
+        `).join('');
+
+            updateTotal();
+        }
+
+        function addToCart(platoData) {
+            let cart = getCart();
+            const newItemKey = getCartItemKey(platoData);
+            const existing = cart.find(i => getCartItemKey(i) === newItemKey);
+            if (existing) {
+                existing.cantidad += 1;
+            } else {
+                cart.push({ ...platoData, cantidad: 1 });
+            }
+            saveCart(cart);
+            updateCartBadge();
+            updateTotal();
+        }
+
+        function removeOneFromCart(itemKey) {
+            let cart = getCart();
+            cart = cart.map(item => {
+                if (getCartItemKey(item) === itemKey) {
+                    return { ...item, cantidad: item.cantidad - 1 };
+                }
+                return item;
+            }).filter(item => item.cantidad > 0);
+            saveCart(cart);
+            updateCartBadge();
+            renderCartModal();
+        }
+
+        document.querySelectorAll('.btn-agregar-cart[data-id]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const platoData = {
+                    id_plato: Number(btn.dataset.id),
+                    nombre: btn.dataset.nombre,
+                    precio: Number(btn.dataset.precio)
+                };
+                addToCart(platoData);
+            });
+        });
+
+        const dailyMenuForm = document.getElementById('daily-menu-form');
+        if (dailyMenuForm) {
+            dailyMenuForm.addEventListener('submit', (event) => {
+                event.preventDefault();
+
+                const entrante = dailyMenuForm.querySelector('input[name="entrante"]:checked');
+                const principal = dailyMenuForm.querySelector('input[name="principal"]:checked');
+                const postre = dailyMenuForm.querySelector('input[name="postre"]:checked');
+                const bebida = dailyMenuForm.querySelector('input[name="bebida"]:checked');
+
+                if (!entrante || !principal || !postre || !bebida) {
+                    alert('Elige un entrante, un plato principal, un postre y una bebida para añadir el menú.');
+                    return;
+                }
+
+                const menuData = {
+                    tipo: 'menu',
+                    id_menu: Number(dailyMenuForm.dataset.menuId),
+                    fecha: dailyMenuForm.dataset.menuFecha,
+                    nombre: 'Menú del día',
+                    precio: 15,
+                    bebida: bebida.dataset.nombre,
+                    seleccion: {
+                        entrante: { id: Number(entrante.value), nombre: entrante.dataset.nombre },
+                        principal: { id: Number(principal.value), nombre: principal.dataset.nombre },
+                        postre: { id: Number(postre.value), nombre: postre.dataset.nombre },
+                        bebida: { id: Number(bebida.value), nombre: bebida.dataset.nombre }
+                    }
+                };
+
+                menuData.item_key = getCartItemKey(menuData);
+                addToCart(menuData);
+            });
+        }
+
+        document.getElementById('boton-ver-carrito').addEventListener('click', () => {
+            renderCartModal();
+            $cartModal.style.display = 'block';
+        });
+
+        document.getElementById('closeCart').addEventListener('click', () => {
+            $cartModal.style.display = 'none';
+        });
+
+        window.addEventListener('click', (event) => {
+            if (event.target === $cartModal) {
+                $cartModal.style.display = 'none';
+            }
+        });
+
+        document.getElementById('vaciar-carrito').addEventListener('click', () => {
+            saveCart([]);
+            updateCartBadge();
+            renderCartModal();
+        });
+
+        document.getElementById('comprar-ahora').addEventListener('click', () => {
+            const carrito = JSON.parse(sessionStorage.getItem('restaurante_carrito') || '[]');
+            if (carrito.length === 0) {
+                alert('El carrito está vacío. Añade algún plato antes de continuar.');
+                return;
+            }
+
+            fetch('/carrito', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ restaurante_carrito: carrito })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    window.location.href = '/pago';
+                } else {
+                    alert(data.message || 'Error al guardar el carrito.');
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        });
+        
+        $carritoItems.addEventListener('click', (event) => {
+            if (event.target.classList.contains('btn-remove')) {
+                removeOneFromCart(event.target.dataset.key);
+            }
+        });
+
+        updateCartBadge();
+        updateTotal();
+    </script>
+
+</body>
+
+</html>

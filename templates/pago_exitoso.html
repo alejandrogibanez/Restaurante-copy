@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Pago confirmado</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+
+<body class="fondo-home">
+    <div class="contenido">
+        <a href="/" class="home-button">
+            <span class="text">Inicio</span>
+        </a>
+
+        <div class="container carta_Clientes" style="text-align:center; padding: 30px; background: rgba(255,255,255,0.92); border-radius: 18px;">
+            <h2>Pago confirmado</h2>
+            <p>Tu pedido se ha procesado correctamente.</p>
+            <p>Gracias por tu compra.</p>
+            <div style="display:flex; justify-content:center; gap:12px; margin-top:20px; flex-wrap:wrap;">
+                <a href="{{ url_for('carta') }}" class="btn-editar-cart">Volver a la carta</a>
+                <a href="/" class="btn-secondary">Ir al inicio</a>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

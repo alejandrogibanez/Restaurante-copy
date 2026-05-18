@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <title>Perfil</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+
+<body class="fondo-perfil">
+    <div class="contenido">
+        <div class="container">
+            <a href="/" class="home-button">Inicio</a>
+            <h2>Perfil del cliente</h2>
+            <p><strong>Correo asociado:</strong> {{ user.email or session.user }}</p>
+            <p><strong>Nombre:</strong> {{ user.nombre }}</p>
+            <p><strong>Dirección:</strong> {{ user.direccion }}</p>
+            <p><strong>Saldo:</strong> {{ "%.2f" | format(user.saldo) }} €</p>
+
+
+            <div class="edit-profile">
+                <button onclick="abrirModal()">
+                    Editar perfil
+                </button>
+
+                <form action="/logout" method="post">
+                    <button type="submit">
+                        Cerrar sesión
+                    </button>
+                </form>
+            </div>
+
+            <div id="modalEditar" class="modal">
+                <div class="modal-content">
+                    <span class="close" onclick="cerrarModal()">&times;</span>
+                    <h3>Editar perfil</h3>
+                    <form method="POST" action="/update">
+                        <p>Correo electrónico no modificable</p>
+                        <input type="text" name="nombre" value="{{ user.nombre }}" required>
+                        <input type="text" name="apellidos" value="{{ user.apellidos }}" required>
+                        <input type="text" name="direccion" value="{{ user.direccion }}" required>
+                        <button type="submit">Actualizar</button>
+                    </form>
+
+                </div>
+            </div>
+
+            <script>
+                function abrirModal() {
+                    document.getElementById("modalEditar").style.display = "block";
+                }
+
+                function cerrarModal() {
+                    document.getElementById("modalEditar").style.display = "none";
+                }
+
+                window.onclick = function (event) {
+                    let modal = document.getElementById("modalEditar");
+                    if (event.target == modal) {
+                        modal.style.display = "none";
+                    }
+                }
+            </script>
+
+        </div>
+    </div>
+</body>
+
+</html>

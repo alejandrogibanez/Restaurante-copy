@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Carta</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+
+<body class="fondo-home">
+
+    <div class="contenido">
+
+        <a href="/" class="home-button">
+            <span class="text">Inicio</span>
+        </a>
+
+        <div class="container container-carta">
+
+            <h2>(Superusuario)
+                Carta de platos activos</h2>
+
+            <!-- BOTONES -->
+            <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:12px;">
+                
+                <button type="button" onclick="window.location.href='/facturación'" style="flex: 1; min-width: 200px;">
+                    Acceder a facturación
+                </button>
+
+                <button id="btn-abrir-modal" type="button" style="flex: 1; min-width: 200px;">
+                    Añadir nuevo plato
+                </button>
+                
+                <button id="btn-abrir-modal-existentes" type="button" style="flex: 1; min-width: 200px; background: linear-gradient(135deg, #4c2d1f, #6d3a26); color:#fff;">
+                    Añadir platos existentes
+                </button>
+
+            </div>
+
+            <!-- MODAL AÑADIR PLATO -->
+            <div id="modal-nuevo-plato" class="modal">
+                <div class="modal-content">
+                    <span id="btn-cerrar-modal" class="close">&times;</span>
+                    <h3 style=" color: #7b1e1e;">Añadir nuevo plato</h3>
+                    <form id="form-nuevo-plato" class="form-modal">
+                        <label>
+                            Nombre<br>
+                            <input name="nombre" type="text" required />
+                        </label>
+                        <label>
+                            Descripción<br>
+                            <input name="descripción" required rows="4"></input>
+                        </label>
+
+                        <label style="min-width:120px;">Precio<br>
+                            <input name="precio" type="number" min="0" step="0.01" required />
+                        </label>
+                        <label>Categoría<br>
+                            <select name="categoría" required>
+                                <option style=" color: #7b1e1e;" value="Entrante">Entrante</option>
+                                <option style=" color: #7b1e1e;" value="Principal">Principal</option>
+                                <option style=" color: #7b1e1e;" value="Postre">Postre</option>
+                                <option style=" color: #7b1e1e;" value="Bebida">Bebida</option>
+                            </select>
+                        </label>
+                        <label style="margin-top:8px;">Activo en carta<br>
+                            <input name="carta" type="checkbox" checked style="width: auto;" />
+                        </label>
+                        <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:10px;">
+                            <button id="btn-modal-cancelar" type="button" class="btn-secondary">Cancelar</button>
+                            <button id="btn-modal-guardar" type="submit" class="btn-primary">Guardar</button>
+                        </div>
+                        <p id="mensaje-modal" class="error" style="display:none; margin-top:10px;"></p>
+                    </form>
+                </div>
+            </div>
+
+            <!-- MODAL AÑADIR EXISTENTES -->
+            <div id="modal-existentes" class="modal"
+                style="display: none; align-items: center; justify-content: center;">
+                <div class="modal-content" style="width: 420px; max-height: 80vh; overflow-y: auto;">
+                    <span id="btn-cerrar-existentes" class="close">&times;</span>
+                    <h3 style="color:#7b1e1e; text-align:center;">Platos disponibles para añadir</h3>
+                    <div id="lista-existentes" style="display:flex; flex-direction:column; gap:8px; margin-top:12px;">
+                        {% for plato in platos if plato.activo_en_carta == 0 %}
+                        <div class="plato-card"
+                            style="display:flex; justify-content: space-between; align-items:center;">
+
+                            <div>
+                                <strong>{{ plato.nombre }}</strong>
+                                <small>({{ plato.categoria }})</small><br>
+
+                                <span style="font-size:0.9rem; color:#5a2d0c;">
+                                    {{ plato.descripcion }} - {{ plato.precio }}€
+                                </span>
+                            </div>
+
+                            <button type="button" class="btn-agregar-existente" data-id="{{ plato.id_plato }}"
+                                style="background: linear-gradient(135deg, #8b1e2d, #b23a48); color:white; border:none; border-radius:8px; padding:6px 10px; cursor:pointer;">
+                                + Añadir
+                            </button>
+
+                        </div>
+                        {% else %}
+                        <p style="color: #888; font-style: italic;">
+                            No hay platos disponibles para añadir.
+                        </p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            <!-- MODAL Confirmar eliminación -->
+            <div id="modal-confirmacion" class="modal"
+                style="display: none; align-items: center; justify-content: center;">
+                <div class="modal-content" style="width: 380px; text-align: center;">
+                    <p id="modal-texto" style="color:#5a2d0c; font-weight:600;">¿Seguro?</p>
+                    <div style="display:flex; justify-content:center; gap:10px; margin-top:12px;">
+                        <button id="btn-cancelar" class="btn-primary" style="width:auto;">Cancelar</button>
+                        <button id="btn-confirmar" class="btn-secondary" style="width:auto;">Sí</button>
+
+                    </div>
+                </div>
+            </div>
+            <!-- ZONA SCROLL -->
+            <div class="scroll-box">
+                <div class="categoria-grupo admin-menu-card">
+                    <h3 class="titulo-categoria" data-categoria="AdminMenuDia">Gestionar menú del día{% if menu_fecha_es %} · {{ menu_fecha_es }}{% endif %}</h3>
+                    <div class="platos-categoria" id="categoria-AdminMenuDia">
+                        <form class="daily-menu-form" method="POST" action="{{ url_for('admin_menu_dia') }}">
+                            <div class="admin-menu-date-row">
+                                <label for="admin-menu-date">Fecha del menú</label>
+                                <input id="admin-menu-date" type="text" value="{{ menu_fecha_es }}" readonly>
+                            </div>
+
+                            <div class="admin-menu-grid">
+                                <div class="admin-menu-panel">
+                                    <h4>Entrantes <span>3 opciones</span></h4>
+                                    {% for i in range(1, 4) %}
+                                    {% set selected_id = menu_dia.entrantes[i - 1].id_plato if menu_dia and menu_dia.entrantes|length >= i else '' %}
+                                    <label class="admin-menu-slot">
+                                        <span>Opción {{ i }}</span>
+                                        <select name="entrante_{{ i }}" required>
+                                            <option value="">Seleccionar plato</option>
+                                            {% for plato in menu_candidates.entrantes %}
+                                            <option value="{{ plato.id_plato }}" {% if plato.id_plato == selected_id %}selected{% endif %}>
+                                                {{ plato.nombre }}{% if not plato.activo_en_carta %} (fuera de carta){% endif %}
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                    </label>
+                                    {% endfor %}
+                                </div>
+
+                                <div class="admin-menu-panel">
+                                    <h4>Principales <span>3 opciones</span></h4>
+                                    {% for i in range(1, 4) %}
+                                    {% set selected_id = menu_dia.principales[i - 1].id_plato if menu_dia and menu_dia.principales|length >= i else '' %}
+                                    <label class="admin-menu-slot">
+                                        <span>Opción {{ i }}</span>
+                                        <select name="principal_{{ i }}" required>
+                                            <option value="">Seleccionar plato</option>
+                                            {% for plato in menu_candidates.principales %}
+                                            <option value="{{ plato.id_plato }}" {% if plato.id_plato == selected_id %}selected{% endif %}>
+                                                {{ plato.nombre }}{% if not plato.activo_en_carta %} (fuera de carta){% endif %}
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                    </label>
+                                    {% endfor %}
+                                </div>
+
+                                <div class="admin-menu-panel">
+                                    <h4>Postres <span>2 opciones</span></h4>
+                                    {% for i in range(1, 3) %}
+                                    {% set selected_id = menu_dia.postres[i - 1].id_plato if menu_dia and menu_dia.postres|length >= i else '' %}
+                                    <label class="admin-menu-slot">
+                                        <span>Opción {{ i }}</span>
+                                        <select name="postre_{{ i }}" required>
+                                            <option value="">Seleccionar plato</option>
+                                            {% for plato in menu_candidates.postres %}
+                                            <option value="{{ plato.id_plato }}" {% if plato.id_plato == selected_id %}selected{% endif %}>
+                                                {{ plato.nombre }}{% if not plato.activo_en_carta %} (fuera de carta){% endif %}
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                    </label>
+                                    {% endfor %}
+                                </div>
+                            </div>
+
+                            <div class="admin-menu-footer">
+                                <p>Bebida incluida · Precio fijo: 15 €</p>
+                                <button type="submit">Guardar menú del día</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="categoria-grupo">
+                    <h3 class="titulo-categoria" data-categoria="Entrante">Entrantes</h3>
+                    <div class="platos-categoria" id="categoria-Entrante">
+                        {% for plato in platos if plato.categoria == 'Entrante' and plato.activo_en_carta %}
+                        <div class="plato-item" style="display: flex; align-items: center; gap: 10px;">
+
+                            <button type="button" class="btn-quitar" data-id="{{ plato.id_plato }}">
+                                &times;
+                            </button>
+
+                            <span>
+                                {{ plato.nombre }} - {{ plato.precio }}€
+                            </span>
+                            <p class="descripcion-plato">{{ plato.descripcion }}</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="categoria-grupo">
+                    <h3 class="titulo-categoria" data-categoria="Principal">Principales</h3>
+                    <div class="platos-categoria" id="categoria-Principal">
+                        {% for plato in platos if plato.categoria == 'Principal' and plato.activo_en_carta %}
+                        <div class="plato-item" style="display: flex; align-items: center; gap: 10px;">
+
+                            <button type="button" class="btn-quitar" data-id="{{ plato.id_plato }}">
+                                &times;
+                            </button>
+
+                            <span>
+                                {{ plato.nombre }} - {{ plato.precio }}€
+                            </span>
+                            <p class="descripcion-plato">{{ plato.descripcion }}</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="categoria-grupo">
+                    <h3 class="titulo-categoria" data-categoria="Postre">Postres</h3>
+                    <div class="platos-categoria" id="categoria-Postre">
+                        {% for plato in platos if plato.categoria == 'Postre' and plato.activo_en_carta %}
+                        <div class="plato-item" style="display: flex; align-items: center; gap: 10px;">
+
+                            <button type="button" class="btn-quitar" data-id="{{ plato.id_plato }}">
+                                &times;
+                            </button>
+
+                            <span>
+                                {{ plato.nombre }} - {{ plato.precio }}€
+                            </span>
+                            <p class="descripcion-plato">{{ plato.descripcion }}</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="categoria-grupo">
+                    <h3 class="titulo-categoria" data-categoria="Bebida">Bebidas</h3>
+                    <div class="platos-categoria" id="categoria-Bebida">
+                        {% for plato in platos if plato.categoria == 'Bebida' and plato.activo_en_carta %}
+                        <div class="plato-item" style="display: flex; align-items: center; gap: 10px;">
+                            <button type="button" class="btn-quitar" data-id="{{ plato.id_plato }}">
+                                &times;
+                            </button>
+                            <span>
+                                {{ plato.nombre }} - {{ plato.precio }}€
+                            </span>
+                            <p class="descripcion-plato">{{ plato.descripcion }}</p>
+
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+    <script>
+        function initCategorias() {
+            document.querySelectorAll('.titulo-categoria').forEach(h3 => {
+                h3.addEventListener('click', () => {
+                    const categoria = h3.dataset.categoria;
+                    const contenedor = document.getElementById(`categoria-${categoria}`);
+
+                    const estaMostrado = contenedor.style.display !== 'none';
+                    document.querySelectorAll('.platos-categoria').forEach(div => div.style.display = 'none');
+
+                    if (!estaMostrado) {
+                        contenedor.style.display = 'block';
+                        h3.classList.add('active');
+                    } else {
+                        h3.classList.remove('active');
+                    }
+
+                    document.querySelectorAll('.titulo-categoria').forEach(h => {
+                        if (h !== h3) h.classList.remove('active');
+                    });
+                });
+            });
+        }
+
+        function initModalPlato() {
+            const modal = document.getElementById('modal-nuevo-plato');
+            const modalContent = modal.querySelector('.modal-content');
+            const btnAbrir = document.getElementById('btn-abrir-modal');
+            const btnCerrar = document.getElementById('btn-cerrar-modal');
+            const btnCancelar = document.getElementById('btn-modal-cancelar');
+            const form = document.getElementById('form-nuevo-plato');
+            const mensaje = document.getElementById('mensaje-modal');
+
+            const abrir = () => {
+                modal.style.display = 'block';
+                modalContent.style.position = 'absolute';
+                modalContent.style.left = '50%';
+                modalContent.style.top = '50%';
+                modalContent.style.transform = 'translate(-50%, -50%)';
+                modalContent.style.margin = '0';
+                mensaje.style.display = 'none';
+            };
+            const cerrar = () => {
+                modal.style.display = 'none';
+                form.reset();
+            };
+
+            btnAbrir.addEventListener('click', abrir);
+            btnCerrar.addEventListener('click', cerrar);
+            btnCancelar.addEventListener('click', cerrar);
+
+            window.addEventListener('click', (event) => {
+                if (event.target === modal) cerrar();
+            });
+
+            form.addEventListener('submit', async (event) => {
+                event.preventDefault();
+                const formData = new FormData(form);
+
+                try {
+                    const response = await fetch('/nuevo_plato', {
+                        method: 'POST',
+                        body: formData,
+                        credentials: 'same-origin'
+                    });
+
+                    if (!response.ok) throw new Error(`Error ${response.status}`);
+
+                    mensaje.textContent = 'Plato creado correctamente.';
+                    mensaje.style.color = 'green';
+                    mensaje.style.display = 'block';
+
+                    setTimeout(() => {
+                        cerrar();
+                        window.location.reload();
+                    }, 900);
+                } catch (error) {
+                    mensaje.textContent = 'No se pudo crear el plato. Intenta de nuevo.';
+                    mensaje.style.color = 'red';
+                    mensaje.style.display = 'block';
+                }
+            });
+        }
+
+        function initModalExistentes() {
+            const modal = document.getElementById('modal-existentes');
+            const btnAbrir = document.getElementById('btn-abrir-modal-existentes');
+            const btnCerrar = document.getElementById('btn-cerrar-existentes');
+            const lista = document.getElementById('lista-existentes');
+
+            const abrir = () => {
+                modal.style.display = 'flex';
+            };
+            const cerrar = () => {
+                modal.style.display = 'none';
+            };
+
+            btnAbrir.addEventListener('click', abrir);
+            btnCerrar.addEventListener('click', cerrar);
+
+            window.addEventListener('click', (event) => {
+                if (event.target === modal) cerrar();
+            });
+
+            lista.addEventListener('click', async (event) => {
+                const btn = event.target.closest('.btn-agregar-existente');
+                if (!btn) return;
+
+                const id_plato = btn.dataset.id;
+                if (!id_plato) return;
+
+                try {
+                    const response = await fetch('/añadir_en_carta', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded'
+                        },
+                        body: new URLSearchParams({ id_plato })
+                    });
+
+                    if (!response.ok) throw new Error('Error al añadir el plato');
+
+                    // Eliminar item de la lista visual inmediatamente
+                    btn.closest('.plato-card').remove();
+
+                } catch (error) {
+                    alert('No se pudo añadir el plato. Intenta de nuevo.');
+                    console.error(error);
+                }
+            });
+        }
+
+        initCategorias();
+        initModalPlato();
+        initModalExistentes();
+
+        // Añadir funcionalidad para botón X de quitar plato en superusuario
+        document.addEventListener('DOMContentLoaded', () => {
+
+            const modal = document.getElementById('modal-confirmacion');
+            const btnConfirmar = document.getElementById('btn-confirmar');
+            const btnCancelar = document.getElementById('btn-cancelar');
+
+            let accionConfirmada = null; // guardamos la acción temporalmente
+
+            // Función para abrir modal
+            function mostrarConfirmacion(mensaje, callback) {
+                document.getElementById('modal-texto').innerText = mensaje;
+                modal.style.display = 'flex';
+                accionConfirmada = callback;
+            }
+
+            // Botón cancelar
+            btnCancelar.addEventListener('click', () => {
+                modal.style.display = 'none';
+                accionConfirmada = null;
+            });
+
+            // Botón confirmar
+            btnConfirmar.addEventListener('click', () => {
+                modal.style.display = 'none';
+                if (accionConfirmada) accionConfirmada();
+            });
+
+            document.querySelectorAll('.btn-quitar').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const id_plato = btn.dataset.id;
+
+                    mostrarConfirmacion('¿Deseas quitar este plato de la carta?', async () => {
+                        try {
+                            const response = await fetch('/quitar_de_carta', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/x-www-form-urlencoded'
+                                },
+                                body: new URLSearchParams({ id_plato })
+                            });
+
+                            if (!response.ok) throw new Error('Error al quitar el plato');
+
+                            window.location.reload();
+                        } catch (error) {
+                            alert('No se pudo quitar el plato. Intenta de nuevo.');
+                            console.error(error);
+                        }
+                    });
+
+                });
+            });
+
+        });
+    </script>
+</body>
+
+</html>
